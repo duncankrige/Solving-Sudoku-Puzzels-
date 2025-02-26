@@ -1,0 +1,165 @@
+//Duncan Krige 
+// Project 1 Solving Sudoku
+//CSC2
+#include <iostream>
+#include <fstream>
+
+using namespace std;
+
+int puzzle[9][9]; //declaring 2D array
+const int Num_rows = 9; //defining constants so we dont have to hard code 9 
+const int Num_col = 9;
+
+// Check if placing a number in the cell is valid
+bool isValid(int puzzle[9][9], int row, int col, int num) //Parameters -  int row (is the row index (0 to 8)of where you want to place the number. And the same for int Col just in cols. Int num - numbered to be place in cell)
+{
+// Check if num is already in the row! We start at zero heading up to Num_col by increments of 1.
+    for (int i = 0; i < Num_col; i++) 
+        {
+            if (puzzle[row][i] == num)//checking if number is repeated inthe row by checking the value of the current cell if equal to num.
+                {
+                    return false; // if we find that number in the row we return false. 
+                }
+        }
+
+// Check if num is already in the column
+    for (int j = 0; j < Num_rows; j++) 
+        {
+            if (puzzle[j][col] == num) //checking if number is repeated in column
+                {
+                    return false;
+                }
+        }
+
+// Check 3x3 sub-grid
+    int gridRow = row - row % 3; //breaking the puzzel rows up into three 
+    int gridCol = col - col % 3; // Breaking the puzzel cols up into three 
+
+    for (int i = 0; i < 3; i++) // iterated over 3 rows within the 3x3 grid 
+        {
+            for (int j = 0; j < 3; j++)  //iterates over 3 cols
+                {
+                    if (puzzle[i + gridRow][j + gridCol] == num) //checks if num exists in any of the cells in those grids.(i + gridRow gives row indexin puzzel)
+                        {
+                            return false; // if we find that num in the grid we return false because invalid 
+                        }
+                }
+        }
+
+    return true; // The number can be placed in the cell
+}
+
+// Recursive function 
+bool findSolution(int puzzle[9][9], int i, int j) 
+{
+    if (i == 9) // When this occurs we reach the end of the puzzle, it's solved
+        { 
+            return true;
+        }
+    
+    if (j == 9) // Move to the next row if we finish the current row
+        { 
+            return findSolution(puzzle, i + 1, 0);
+        }
+
+    if (puzzle[i][j] != 0) // We need to skip filled cells 
+        { 
+            return findSolution(puzzle, i, j + 1); //if (i, j) are full, we skip the cell and move to the next column by calling itself with j + 1.
+        }
+
+    for (int num = 1; num <= 9; num++) // Try placing numbers 1 to 9
+        { 
+            if (isValid(puzzle, i, j, num)) //checks whether placing num in the cell (i, j) is valid 
+                {
+                    puzzle[i][j] = num; // Place num in the empty cell
+
+                    if (findSolution(puzzle, i, j + 1)) // Recursively solve the rest of the puzzle
+                        { 
+                            return true;
+                        }
+
+                    puzzle[i][j] = 0; // We need to Backtrack: undo the move
+                }
+        }
+
+    return false; // If no solution found, return false
+}
+
+int main() 
+{
+    string filename; // Store filename
+    ifstream fin;    // This is the file input stream
+    cout << "Please enter the name of the input file: "; // Prompt user
+    cin >> filename; // Retrieve file from user
+    cout << "File " << filename << endl; // Process the file
+
+    fin.open(filename); // Open the file
+    if (!fin) // Test if the file was opened
+        { 
+            cout << "Error: Could not open your file." << endl; // Error message
+            return 1;
+        }
+    cout << "File opened successfully!" << endl;
+
+    // Reading numbers from file to array
+    for (int i = 0; i < 9; i++)// Loop through rows of file 
+        { 
+            for (int j = 0; j < 9; j++) // Loop through columns of file
+                { 
+                    fin >> puzzle[i][j];
+                }
+        }
+    fin.close(); // Close the file
+
+    // Print out what the loaded file looks like
+    cout << "This is the Sudoku puzzle loaded from file:" << endl;
+    for (int i = 0; i < 9; i++) 
+        {
+            for (int j = 0; j < 9; j++) 
+                {
+                    cout << puzzle[i][j] << " ";
+                    if (j == 2 || j == 5) // Add vertical dividers at 3rd and 6th columns
+                        { 
+                            cout << "| ";
+                        }
+                }
+            cout << endl;
+            if (i == 2 || i == 5) // Add horizontal line at row 3 and 6
+                { 
+                    cout << "------+-------+-------" << endl;
+                }
+        }
+    cout << endl;//three empy lines
+    cout << endl;
+    cout << endl;
+    
+
+    // Solve the puzzle
+    if (findSolution(puzzle, 0, 0)) 
+        {
+            cout << "Puzzle Solved!" << endl;
+    // Print the solved puzzle
+            for (int i = 0; i < 9; i++) 
+                {
+                    for (int j = 0; j < 9; j++) 
+                        {
+                            cout << puzzle[i][j] << " ";
+                            if (j == 2 || j == 5) 
+                                {
+                                    cout << "| ";
+                                }
+                        }
+                    cout << endl;
+                    if (i == 2 || i == 5) 
+                        {
+                            cout << "------+-------+-------" << endl;
+                        }
+                }
+        } 
+        else // if we are unable to complete the puzzel 
+            {
+                cout << "No solution found." << endl;
+            }
+
+    return 0;
+}
